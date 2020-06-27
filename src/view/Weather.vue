@@ -57,13 +57,13 @@
         ctx.font = "12px serif";
         const scaleX = canvas.height/(this.xMax - this.xMin)*0.7
         const scaleY = canvas.height/(this.yMax - this.yMin)*0.7
-        const firstParmsX = 17*(Math.sin((360/5*0)*Math.PI/180)).toFixed(1)
+        const firstParmsX = 17*(Math.sin((0)*Math.PI/180)).toFixed(1)
         console.log(firstParmsX)
-        const firstParmsY = 17*(Math.cos((360/5*0)*Math.PI/180)).toFixed(1)
+        const firstParmsY = 17*(Math.cos((0)*Math.PI/180)).toFixed(1)
         console.log(firstParmsY)
-        const secondParmsX = 17*(Math.sin((360/5*1)*Math.PI/180)).toFixed(1)
+        const secondParmsX = 17*(Math.sin((360/5)*Math.PI/180)).toFixed(1)
         console.log(secondParmsX)
-        const secondParmsY = 17*(Math.cos((360/5*1)*Math.PI/180)).toFixed(1)
+        const secondParmsY = 17*(Math.cos((360/5)*Math.PI/180)).toFixed(1)
         console.log(secondParmsY)
         const thirdParmsX = 17*(Math.sin((360/5*2)*Math.PI/180)).toFixed(1)
         console.log(thirdParmsX)
