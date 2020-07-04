@@ -1,8 +1,8 @@
 <template>
   <div>
-    <canvas id="canvas" width="780" height="300"></canvas>
-    <div>{{parmas}}</div>
-    <button @click="test">点击</button>
+    <div id="cesiumContainer"></div>
+    <canvas id="canvas"></canvas>
+    <!--        <canvas id="canvas" :width="getWidth" :height="getHeight"></canvas>-->
   </div>
 </template>
 
@@ -11,10 +11,10 @@
     data() {
       return {
         parmas: [
-          {"lon":124,"lat":28,"qiya":1,"wendu":21,"shidu":31,"diwen":41,"jiangshui":51},
-          {"lon":123,"lat":27,"qiya":2,"wendu":22,"shidu":32,"diwen":42,"jiangshui":52},
-          {"lon":125,"lat":26,"qiya":3,"wendu":23,"shidu":33,"diwen":43,"jiangshui":53},
-          {"lon":122,"lat":25,"qiya":4,"wendu":24,"shidu":34,"diwen":44,"jiangshui":54}
+          {"lon":117.201,"lat":31.8517,"qiya":117.201,"wendu":31.8517,"shidu":50,"diwen":1,"jiangshui":9999},
+          {"lon":117.349,"lat":31.9783,"qiya":117.349,"wendu":31.9783,"shidu":25,"diwen":1,"jiangshui":9999},
+          {"lon":121.645,"lat":31.0247,"qiya":121.645,"wendu":31.0247,"shidu":4.5,"diwen":1,"jiangshui":9999},
+          {"lon":124.914,"lat":29.0717,"qiya":124.914,"wendu":29.0717,"shidu":44.5,"diwen":1,"jiangshui":9999}
           ],
         py: Number,
         px: Number,
@@ -22,6 +22,26 @@
         xMax: Number,
         yMin: Number,
         yMax: Number,
+        canvasUrl: '',
+        scaleLevelL: '',
+        fontSize: 12,
+        getWidth: 775,
+        getHeight: 295,
+        scaleX: '',
+        scaleY: '',
+        radius: 17,
+        firstParmsX: Number,
+        firstParmsY: Number,
+        secondParmsX: Number,
+        secondParmsY: Number,
+        thirdParmsX: Number,
+        thirdParmsY: Number,
+        fourthParmsX: Number,
+        fourthParmsY: Number,
+        fifthParmsX: Number,
+        fifthParmsY: Number,
+        img: '',
+        arr: []
       };
     },
     created() {
@@ -30,6 +50,61 @@
     mounted () {
       this.get();
     },
+    watch: {
+      scaleLevelL(newVal) {
+        console.log(this.scaleLevelL)
+        if (newVal === 2) {
+          this.getWidth = 775 / 1.7
+          this.getHeight = 295 / 1.7
+          this.getLayer()
+        } else if (newVal === 4) {
+          this.removeLayer()
+          this.getWidth = 775 / 1.6
+          this.getHeight = 295 / 1.6
+          this.getLayer()
+        } else if (newVal === 6) {
+          this.removeLayer()
+          this.getWidth = 775 / 1.2
+          this.getHeight = 295 / 1.2
+          this.getLayer()
+        } else if (newVal === 7) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.8
+          this.getHeight = 295 / 0.8
+          this.getLayer()
+        } else if (newVal === 8) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.5
+          this.getHeight = 295 / 0.5
+          this.getLayer()
+        } else if (newVal === 9) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.25
+          this.getHeight = 295 / 0.25
+          this.getLayer()
+        } else if (newVal === 10) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.15
+          this.getHeight = 295 / 0.15
+          this.getLayer()
+        } else if (newVal === 11) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.1
+          this.getHeight = 295 / 0.1
+          this.getLayer()
+        } else if (newVal === 12) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.09
+          this.getHeight = 295 / 0.09
+          this.getLayer()
+        } else if (newVal === 13) {
+          this.removeLayer()
+          this.getWidth = 775 / 0.08
+          this.getHeight = 295 / 0.08
+          this.getLayer()
+        }
+      }
+    },
     methods: {
       get() {
         // const { data : res } = await this.axios('http://192.168.1.2:8301/' +
@@ -37,74 +112,172 @@
         //   '1&encrypt=1&time=2020-01-02%2014%3A50%3A00')
         // this.parmas = res.data
 
-        let pyArr = []
-        let pxArr = []
-        for(let i =0;i<this.parmas.length;i++){
-          this.px = Object.values(this.parmas[i])[0]
-          pxArr.push(this.px)
-          this.py = Object.values(this.parmas[i])[1]
-          pyArr.push(this.py)
+        this.getCesium()
+        // 获取camera的高度
+        // 根据camera高度近似计算当前层级
+        // 监听地图移动完成事件
+        window.earth.camera.moveStart.addEventListener(() => {
+          let height = Math.ceil(window.earth.camera.positionCartographic.height)
+          let A = 40487.57
+          let B = 0.00007096758
+          let C = 91610.74
+          let D = -40467.74
+          this.scaleLevelL = Math.round(D + (A - D) / (1 + Math.pow(height / C, B)))
+          // console.log(this.scaleLevelL)
+        },)
+      },
+      // 获得图层，将canvas画到cesium上
+      getLayer() {
+        // 从getCanvas()中获取canvas的url
+        // let canvasUrl = this.getCanvas()
+        // this.img = canvasUrl.toDataURL()
+        let layers = window.earth.scene.imageryLayers;
+        let blackMarble = layers.addImageryProvider(
+          new Cesium.IonImageryProvider({ assetId: 3812 })
+        );
+
+        blackMarble.alpha = 0.5;
+
+        blackMarble.brightness = 2.0;
+
+        const layerLoad = layers.addImageryProvider(
+          new Cesium.SingleTileImageryProvider({
+            url: this.getCanvas().toDataURL(),
+            rectangle: Cesium.Rectangle.fromDegrees(115.545, 28.449, 126.587, 32.601),
+          }),
+        );
+        // window.earth.imageryLayers.remove(layerLoad)
+        // return layerLoad
+        this.arr.push(layerLoad)
+      },
+      // 清除图层
+      removeLayer() {
+        // let oneLayer = this.getLayer()
+        // window.earth.imageryLayers.remove(oneLayer)
+        this.arr.forEach(item => {
+          window.earth.imageryLayers.remove(item)
+        })
+        this.arr = []
+      },
+      // 获得canvas
+      getCanvas() {
+        const pyArr = [];
+        const pxArr = [];
+        for (let i = 0; i < this.parmas.length; i++) {
+          this.px = Object.values(this.parmas[i])[2];
+          pxArr.push(this.px);
+          this.py = Object.values(this.parmas[i])[3];
+          pyArr.push(this.py);
         }
-
-        this.xMax = Math.max.apply(Math,pxArr)
-        this.xMin = Math.min.apply(Math,pxArr)
-        this.yMax = Math.max.apply(Math,pyArr)
-        this.yMin = Math.min.apply(Math,pyArr)
-
+        this.xMax = Math.max.apply(Math, pxArr);
+        this.xMin = Math.min.apply(Math, pxArr);
+        this.yMax = Math.max.apply(Math, pyArr);
+        this.yMin = Math.min.apply(Math, pyArr);
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'red';
-        ctx.font = "12px serif";
-        const scaleX = canvas.height/(this.xMax - this.xMin)*0.7
-        const scaleY = canvas.height/(this.yMax - this.yMin)*0.7
-        const firstParmsX = 17*(Math.sin((0)*Math.PI/180)).toFixed(1)
-        console.log(firstParmsX)
-        const firstParmsY = 17*(Math.cos((0)*Math.PI/180)).toFixed(1)
-        console.log(firstParmsY)
-        const secondParmsX = 17*(Math.sin((360/5)*Math.PI/180)).toFixed(1)
-        console.log(secondParmsX)
-        const secondParmsY = 17*(Math.cos((360/5)*Math.PI/180)).toFixed(1)
-        console.log(secondParmsY)
-        const thirdParmsX = 17*(Math.sin((360/5*2)*Math.PI/180)).toFixed(1)
-        console.log(thirdParmsX)
-        const thirdParmsY = 17*(Math.cos((360/5*2)*Math.PI/180)).toFixed(1)
-        console.log(thirdParmsY)
-        const fourthParmsX = 17*(Math.sin((360/5*3)*Math.PI/180)).toFixed(1)
-        console.log(fourthParmsX)
-        const fourthParmsY = 17*(Math.cos((360/5*3)*Math.PI/180)).toFixed(1)
-        console.log(fourthParmsY)
-        const fifthParmsX = 17*(Math.sin((360/5*4)*Math.PI/180)).toFixed(1)
-        console.log(fifthParmsX)
-        const fifthParmsY = 17*(Math.cos((360/5*4)*Math.PI/180)).toFixed(1)
-        console.log(fifthParmsY)
-
-        for(let i =0;i<this.parmas.length;i++) {
+        canvas.style.width = 775 + 'px'
+        canvas.style.width = 295 + 'px'
+        canvas.width = this.getWidth
+        canvas.height = this.getHeight
+        ctx.font = 'normal normal 500 12px serif';
+        // 放大倍数
+        this.scaleX = canvas.width / (this.xMax - this.xMin) * 0.7;
+        this.scaleY = canvas.height / (this.yMax - this.yMin) * 0.7;
+        // 参数位置
+        this.firstParmsX = this.radius * (Math.sin((0) * Math.PI / 180)).toFixed(1);
+        this.firstParmsY = this.radius * (Math.cos((0) * Math.PI / 180)).toFixed(1);
+        this.secondParmsX = this.radius * (Math.sin((360 / 5) * Math.PI / 180)).toFixed(1);
+        this.secondParmsY = this.radius * (Math.cos((360 / 5) * Math.PI / 180)).toFixed(1);
+        this.thirdParmsX = this.radius * (Math.sin((360 / 5 * 2) * Math.PI / 180)).toFixed(1);
+        this.thirdParmsY = this.radius * (Math.cos((360 / 5 * 2) * Math.PI / 180)).toFixed(1);
+        this.fourthParmsX = this.radius * (Math.sin((360 / 5 * 3) * Math.PI / 180)).toFixed(1);
+        this.fourthParmsY = this.radius * (Math.cos((360 / 5 * 3) * Math.PI / 180)).toFixed(1);
+        this.fifthParmsX = this.radius * (Math.sin((360 / 5 * 4) * Math.PI / 180)).toFixed(1);
+        this.fifthParmsY = this.radius * (Math.cos((360 / 5 * 4) * Math.PI / 180)).toFixed(1);
+        // 向canvas映射地点、参数
+        for (let i = 0; i < this.parmas.length; i++) {
           // 地点
-          ctx.fillRect((pxArr[i] - this.xMin)*scaleX + 40, (pyArr[i] - this.yMin)*scaleY + 40,4,4)
-          // 参数
-          ctx.fillText(Object.values(this.parmas[i])[2],(pxArr[i] - this.xMin)*scaleX + 40 + firstParmsX,
-            (pyArr[i] - this.yMin)*scaleY + 40 + firstParmsY + 8)
-          ctx.fillText(Object.values(this.parmas[i])[3],(pxArr[i] - this.xMin)*scaleX + 40 + secondParmsX,
-            (pyArr[i] - this.yMin)*scaleY + 40 + secondParmsY  +2)
-          ctx.fillText(Object.values(this.parmas[i])[4],(pxArr[i] - this.xMin)*scaleX + 40 + thirdParmsX,
-            (pyArr[i] - this.yMin)*scaleY + 40 + thirdParmsY)
-          ctx.fillText(Object.values(this.parmas[i])[5],(pxArr[i] - this.xMin)*scaleX + 40 + fourthParmsX - 4,
-            (pyArr[i] - this.yMin)*scaleY + 40 + fourthParmsY)
-          ctx.fillText(Object.values(this.parmas[i])[6],(pxArr[i] - this.xMin)*scaleX + 40 + fifthParmsX - 6,
-            (pyArr[i] - this.yMin)*scaleY + 40 + fifthParmsY  +2)
-
+          ctx.fillStyle = '#f94b52';
+          ctx.fillRect((pxArr[i] - this.xMin) * this.scaleX + canvas.width * 0.15, (this.yMax - pyArr[i]) * this.scaleY + canvas.height * 0.15, 4, 4);
+          // 参数1
+          for (let i = 0; i < this.parmas.length; i++) {
+            ctx.fillStyle = '#a200ec';
+            ctx.fillText("" + Object.values(this.parmas[i])[2], (pxArr[i] - this.xMin) * this.scaleX + canvas.width * 0.15 + this.firstParmsX - 15,
+              (this.yMax - pyArr[i]) * this.scaleY + canvas.height * 0.15 + this.firstParmsY + 8,);
+          }
+          // 参数2
+          for (let i = 0; i < this.parmas.length; i++) {
+            ctx.fillStyle = '#289434';
+            ctx.fillText("" + Object.values(this.parmas[i])[3], (pxArr[i] - this.xMin) * this.scaleX + canvas.width * 0.15 + this.secondParmsX + 3,
+              (this.yMax - pyArr[i]) * this.scaleY + canvas.height * 0.15 + this.secondParmsY + 2);
+          }
+          // 参数3
+          for (let i = 0; i < this.parmas.length; i++) {
+            ctx.fillStyle = '#3a24ed';
+            ctx.fillText("" + Object.values(this.parmas[i])[4], (pxArr[i] - this.xMin) * this.scaleX + canvas.width * 0.15 + this.thirdParmsX,
+              (this.yMax - pyArr[i]) * this.scaleY + canvas.height * 0.15 + this.thirdParmsY);
+          }
+          // 参数4
+          for (let i = 0; i < this.parmas.length; i++) {
+            ctx.fillStyle = "#e01549"
+            ctx.fillText("" + Object.values(this.parmas[i])[5], (pxArr[i] - this.xMin) * this.scaleX + canvas.width * 0.15 + this.fourthParmsX - 4,
+              (this.yMax - pyArr[i]) * this.scaleY + canvas.height * 0.15 + this.fourthParmsY);
+          }
+          // 参数5
+          for (let i = 0; i < this.parmas.length; i++) {
+            ctx.fillStyle = "#1b5cf7"
+            ctx.fillText("" + Object.values(this.parmas[i])[6], (pxArr[i] - this.xMin) * this.scaleX + canvas.width * 0.15 + this.fifthParmsX - 20,
+              (this.yMax - pyArr[i]) * this.scaleY + canvas.height * 0.15 + this.fifthParmsY + 2);
+          }
         }
+        // canvas.toBlob(function (blob) {
+        //     var a = document.createElement('a')
+        //     var body = document.getElementsByTagName('body')
+        //     document.body.appendChild(a)
+        //     a.download = 'img' + '.jpg'
+        //     a.href = window.URL.createObjectURL(blob)
+        //
+        //     a.click()
+        //     document.body.removeChild('a')
+        // })
+        return canvas
       },
-      test() {
-        this.$router.push('test')
+      // 清除canvas
+      removeCanvas() {
+        // document.getElementById("canvas").clearCanvas()
+        // let c = document.getElementById("canvas");
+        // let cxt = c.getContext("2d");
+        // c.height = c.height;
+        // this.getCanvas().setAttribute('height', '2')
+        // this.getCanvas().getContext("2d").clear()
+        // this.getCanvas().width = this.getCanvas().width
+        // let oneCanvas = document.getElementById("canvas");
+        // let ctx = oneCanvas.getContext("2d");
+        // // oneCanvas = ''
+        // // ctx = ''
+        // oneCanvas.style.width = 0 + 'px'
+        // oneCanvas.style.width = 0 + 'px'
+        // ctx.font = '';
+        //
+        //     let oneCanvas = this.getCanvas()
+        //     oneCanvas = ''
+      },
+      // 获取cesium
+      getCesium() {
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWQ2NGZkNC0yYjYzLTRiNzEtOWJjMi01Y2I5NGJlMzEyZGQiLCJpZCI6Mjk4NjAsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTI4MTI1NTR9.-zUaIBAgYOlJ-36v2q9uy2BK4xPendbHEbX8JjKav-s';
+        window.earth = new Cesium.Viewer('cesiumContainer', {
+          imageryProvider: Cesium.createWorldImagery({
+            style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
+          }),
+          baseLayerPicker: false,
+        });
       }
-    }
+    },
   };
 </script>
 
 <style scoped>
-  #canvas{
-    border:1px solid darkolivegreen;
+  #canvas {
+    border: 1px solid #0c6f58;
   }
-
 </style>
