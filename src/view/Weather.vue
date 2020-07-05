@@ -141,6 +141,7 @@
     methods: {
       // 获取cesium
       getCesium () {
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(90, -20, 110, 90);
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWQ2NGZkNC0yYjYzLTRiNzEtOWJjMi01Y2I5NGJlMzEyZGQiLCJpZCI6Mjk4NjAsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTI4MTI1NTR9.-zUaIBAgYOlJ-36v2q9uy2BK4xPendbHEbX8JjKav-s'
         window.earth = new Cesium.Viewer('cesiumContainer', {
           imageryProvider: Cesium.createWorldImagery({
@@ -194,6 +195,7 @@
         canvas.width = this.getWidth
         canvas.height = this.getHeight
         ctx.font = 'normal normal 550 17px serif'
+        // ctx.font = 'normal normal 550 17px Monospace'
 
         // 放大倍数
         let scale = 0.08
@@ -340,4 +342,9 @@
   #canvas {
     border: 1px solid #0c6f58;
   }
+
+  /*.cesium-widget-credits {*/
+  /*  display: none;*/
+  /*!important;*/
+  /*}*/
 </style>
